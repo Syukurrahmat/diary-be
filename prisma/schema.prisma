@@ -1,0 +1,73 @@
+datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["omitApi"]
+}
+
+model User {
+    id       Int    @id @default(autoincrement())
+    name     String
+    email    String @unique
+    password String
+
+    entries Entry[]
+    Tag     Tag[]
+}
+
+model Entry {
+    id         Int      @id @default(autoincrement())
+    userId     Int
+    datetime   DateTime
+    content    String
+    locationId Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user     User      @relation(fields: [userId], references: [id])
+    location Location?
+    images   Image[]
+    tags     Tag[]
+}
+
+model Image {
+    id       Int    @id @default(autoincrement())
+    entryId  Int
+    imageUrl String
+    height   Int
+    width    Int
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    entry Entry @relation(fields: [entryId], references: [id])
+}
+
+model Tag {
+    id        Int      @id @default(autoincrement())
+    userId    Int
+    name      String   @unique
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    entries Entry[]
+    user    User    @relation(fields: [userId], references: [id])
+
+    @@unique([userId, name])
+}
+
+model Location {
+    id        Int    @id @default(autoincrement())
+    entryId   Int    @unique
+    latitude  Float
+    longitude Float
+    address   String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    entry     Entry    @relation(fields: [entryId], references: [id])
+}

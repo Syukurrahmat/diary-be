@@ -7,6 +7,7 @@ import { UpdateEntriesDto } from './dto/update.dto';
 import { ImgbbService } from 'src/lib/Imgbb/Imgbb.service';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { QueryEntriesDto } from './dto/query.dto';
+import * as moment from 'moment-timezone';
 
 
 @Injectable()
@@ -26,7 +27,7 @@ export class EntriesService {
     }
 
 
-    async create({ userId }: UserInfo, createDto: CreateEntriesDto) {
+    async create({ userId, timezone }: UserInfo, createDto: CreateEntriesDto) {
         const { content, location, images, datetime, tags } = createDto
         if (content?.length == 0 && images?.length == 0) throw new BadRequestException('tidak boleh kosong')
 
@@ -41,8 +42,9 @@ export class EntriesService {
             .create({
                 data: {
                     userId,
-                    content: content!,
+                    localDate: moment.tz(datetime, timezone).format('YYYY-MM-DD'),
                     datetime: datetime!,
+                    content: content!,
                     tags: {
                         connectOrCreate: tags!.map(tagsName => ({
                             where: { name: tagsName, userId },
@@ -55,10 +57,16 @@ export class EntriesService {
             })
     }
 
+    async findAll({ userId }: UserInfo, { date, tz }: QueryEntriesDto) {
+        if (date) {
+            const startOfDay = moment.tz(date, tz!).startOf('day').toDate()
+            const endOfDay = moment.tz(date, tz!).endOf('day').toDate()
 
-    async findAll({ userId }: UserInfo, query: QueryEntriesDto) {
+            return { startOfDay, endOfDay }
+        }
 
-        return {dd : new Date(query.date!)}
+
+        // return { dd: new Date(query.date!), ss: moment.tz(query.date!, query.tz!), tz: query.tz }
 
         // return this.resource
         //     .findMany({

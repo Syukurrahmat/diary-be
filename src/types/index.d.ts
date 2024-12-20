@@ -21,4 +21,25 @@ type MetaPaginated = {
 
 type UserInfo = {
     userId: number,
+    timezone: string
+}
+
+
+type SimpleEntryData = {
+    id: number;
+    content: string;
+    datetime: Date;
+    location: {
+        address: string;
+        id: number;
+    } | null;
+    images: {
+        imageUrl: string;
+        width: number;
+        height: number;
+    }[];
+    tags: {
+        id: number,
+        name: string,
+    }[]
 }

@@ -25,6 +25,7 @@ export class UsersService {
             where: { email }, select: {
                 id: true,
                 password: true,
+                timezone :true,
             }
         })
     }

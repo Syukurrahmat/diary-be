@@ -7,6 +7,9 @@ import * as passport from 'passport';
 
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptor/transformInterceptor';
+import { PrismaClient } from '@prisma/client';
+import * as  moment from 'moment-timezone';
+
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -29,20 +32,22 @@ async function bootstrap() {
     app.enableCors();
     app.useGlobalPipes(new ValidationPipe({
         transform: true,
-        transformOptions: {
-            enableImplicitConversion: true, // <- This line here
-        },
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transformOptions: { enableImplicitConversion: true },
     }));
 
     app.useGlobalInterceptors(new ResponseInterceptor())
 
 
     app.use((req, res, next) => {
-        req.user = { userId: 1 } as UserInfo
+        req.user = { userId: 1, timezone: 'Asia/Jakarta' } as UserInfo
         next()
     })
+
 
     await app.listen(3000);
 }
 
 bootstrap();
+

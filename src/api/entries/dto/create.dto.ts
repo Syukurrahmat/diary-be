@@ -1,4 +1,4 @@
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsDate, IsDateString, IsNumber, IsOptional, IsString } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsDate, IsDateString, IsNumber, IsOptional, IsString, ValidateIf } from "class-validator";
 
 export class CreateEntriesDto {
     @IsString()

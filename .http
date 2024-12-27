@@ -5,9 +5,9 @@ POST  http://localhost:3000/notebooks
 
 ########
 
-POST http://localhost:3000/auth/login 
+POST http://localhost:3000/journals 
 Content-Type: application/json
 
-{"email": "siti.ayu@example.com", "password": "password456"} 
+{"content":"wwww","habits":["Kerja","Meditasi","Membaca"],"date":"2024-09-15T17:00:00.000Z"}
 
 

@@ -28,6 +28,7 @@ type UserInfo = {
 type SimpleEntryData = {
     id: number;
     content: string;
+    localDate: string;
     datetime: Date;
     location: {
         address: string;

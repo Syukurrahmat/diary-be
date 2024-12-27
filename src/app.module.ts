@@ -7,6 +7,7 @@ import { UsersModule } from './api/users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
+import { HabitModule } from './api/habits/habits.module';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { PrismaService } from './prisma/prisma.service';
         AuthModule,
         EntriedsModule,
         GeocodingModule,
+        HabitModule,
         JournalsModule,
     ],
     controllers: [],

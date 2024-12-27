@@ -1,14 +1,12 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as express from 'express';
-import * as session from 'express-session';
-import * as passport from 'passport';
+import express from 'express';
+import session from 'express-session';
+import passport from 'passport';
 
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptor/transformInterceptor';
-import { PrismaClient } from '@prisma/client';
-import * as  moment from 'moment-timezone';
 
 
 async function bootstrap() {
@@ -32,8 +30,6 @@ async function bootstrap() {
     app.enableCors();
     app.useGlobalPipes(new ValidationPipe({
         transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
         transformOptions: { enableImplicitConversion: true },
     }));
 
@@ -45,9 +41,7 @@ async function bootstrap() {
         next()
     })
 
-
     await app.listen(3000);
 }
 
 bootstrap();
-

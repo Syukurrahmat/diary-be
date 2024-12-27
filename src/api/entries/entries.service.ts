@@ -7,15 +7,14 @@ import { UpdateEntriesDto } from './dto/update.dto';
 import { ImgbbService } from 'src/lib/Imgbb/Imgbb.service';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { QueryEntriesDto } from './dto/query.dto';
-import * as moment from 'moment-timezone';
+import  moment from 'moment-timezone';
 
 
 @Injectable()
 export class EntriesService {
     private readonly resource: Prisma.EntryDelegate<DefaultArgs>
     private resourceQuery = {
-        // omit: { restaurantId: true },
-        // include: { _count: true }
+
     }
 
     constructor(
@@ -29,7 +28,13 @@ export class EntriesService {
 
     async create({ userId, timezone }: UserInfo, createDto: CreateEntriesDto) {
         const { content, location, images, datetime, tags } = createDto
-        if (content?.length == 0 && images?.length == 0) throw new BadRequestException('tidak boleh kosong')
+
+        const date = moment.tz(datetime, timezone).startOf('d').utc(true).toDate()
+
+        console.log({
+            datetime,
+            date,
+        })
 
         const imageData = images && await this.imgbbService.uploadPhoto(images)
         const locationData = location && {
@@ -41,18 +46,22 @@ export class EntriesService {
         return this.resource
             .create({
                 data: {
-                    userId,
-                    localDate: moment.tz(datetime, timezone).format('YYYY-MM-DD'),
+                    journal: {
+                        connectOrCreate: {
+                            where: { userId_date: { userId, date } },
+                            create: { date, userId }
+                        }
+                    },
                     datetime: datetime!,
                     content: content!,
+                    location: location && { create: locationData },
+                    images: imageData && { createMany: { data: imageData } },
                     tags: {
                         connectOrCreate: tags!.map(tagsName => ({
-                            where: { name: tagsName, userId },
+                            where: { userId_name: { name: tagsName, userId, } },
                             create: { name: tagsName, userId }
                         }))
-                    },
-                    location: location && { create: locationData },
-                    images: imageData && { createMany: { data: imageData } }
+                    }
                 }
             })
     }
@@ -65,20 +74,12 @@ export class EntriesService {
             return { startOfDay, endOfDay }
         }
 
-
-        // return { dd: new Date(query.date!), ss: moment.tz(query.date!, query.tz!), tz: query.tz }
-
-        // return this.resource
-        //     .findMany({
-        //         where: { userId },
-        //         ...this.resourceQuery
-        //     })
     }
 
     async findOne({ userId }: UserInfo, id: number) {
         return await this.resource
             .findFirst({
-                where: { id, userId },
+                where: { id, journal: { userId } },
                 ...this.resourceQuery
             })
     }
@@ -92,6 +93,6 @@ export class EntriesService {
     }
 
     async remove({ userId }: UserInfo, id: number) {
-        await this.resource.delete({ where: { id, userId } })
+        await this.resource.delete({ where: { id, journal: { userId } } })
     }
 }

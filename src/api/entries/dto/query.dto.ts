@@ -1,5 +1,5 @@
 import { IsDateString, IsIn, IsOptional, IsString, ValidateBy, ValidateIf } from "class-validator";
-import * as moment from "moment-timezone";
+import moment from "moment-timezone";
 
 export class QueryEntriesDto {
     @IsOptional()

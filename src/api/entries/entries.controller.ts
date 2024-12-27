@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import LocalAuthGuard from '../../auth/auth.guard';
 import { UpdateEntriesDto } from './dto/update.dto';
@@ -16,6 +16,10 @@ export class EntriesController {
         @UserInfo() user: UserInfo,
         @Body() createDto: CreateEntriesDto,
     ) {
+        const { content, images } = createDto
+        if (content?.length == 0 && images?.length == 0) {
+            throw new BadRequestException('tidak boleh kosong')
+        }
         return await this.services.create(user, createDto);
     }
 

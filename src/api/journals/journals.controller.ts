@@ -1,15 +1,24 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import LocalAuthGuard from '../../auth/auth.guard';
 import { CalenderQuery } from './dto/query.dto';
 import { JournalService } from './journals.service';
+import { CreateJournalDto } from './dto/create.dto';
 
 @Controller('journals')
 @UseGuards(LocalAuthGuard)
 export class JournalsController {
     constructor(private readonly services: JournalService) { }
 
-    @Get('')  //lastest journal
+    @Post()
+    async createJournal(
+        @UserInfo() user: UserInfo,
+        @Body() createDto: CreateJournalDto
+    ) {
+        return await this.services.addHabitAndSummary(user, createDto);
+    }
+
+    @Get()  //lastest journal
     async findAll(@UserInfo() user: UserInfo) {
         return await this.services.getLastest(user);
     }
@@ -17,16 +26,19 @@ export class JournalsController {
     @Get('/calender')
     async getMonthlySummary(
         @UserInfo() user: UserInfo,
-        @Query() { month, year }: CalenderQuery
+        @Query() { month, year, decade }: CalenderQuery
     ) {
-        return await this.services.getCalenderSummary(user, +month!, +year!)
+        const level = decade ? 'decade' : month && year ? 'month' : year ? 'year' : null
+        if (!level) throw new BadRequestException('invalid parameter ')
+
+        return await this.services.getCalenderSummary(user, level, { month, year, decade })
     }
 
-    @Get(':numberdate')
+    @Get(':dateString')
     async findOne(
         @UserInfo() user: UserInfo,
-        @Param('numberdate') numberdate: string
+        @Param('dateString') dateString: string
     ) {
-        return await this.services.getPerDay(user, +numberdate);
+        return await this.services.getPerDay(user, dateString);
     }
 }

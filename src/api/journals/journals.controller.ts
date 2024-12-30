@@ -1,12 +1,11 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { IsPublic } from 'src/common/decorator/public.decorator';
 import { UserInfo } from 'src/common/decorator/user.decorator';
-import LocalAuthGuard from '../../auth/auth.guard';
+import { CreateJournalDto } from './dto/create.dto';
 import { CalenderQuery } from './dto/query.dto';
 import { JournalService } from './journals.service';
-import { CreateJournalDto } from './dto/create.dto';
 
 @Controller('journals')
-@UseGuards(LocalAuthGuard)
 export class JournalsController {
     constructor(private readonly services: JournalService) { }
 

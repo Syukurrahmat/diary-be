@@ -4,11 +4,13 @@ import { GeocodingModule } from './api/geocoding/geocoding.module';
 import { JournalsModule } from './api/journals/journals.module';
 import { TagsModule } from './api/tags/tags.module';
 import { UsersModule } from './api/users/users.module';
-import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
 import { HabitModule } from './api/habits/habits.module';
-
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/jwt.guard';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
     imports: [
@@ -20,9 +22,16 @@ import { HabitModule } from './api/habits/habits.module';
         GeocodingModule,
         HabitModule,
         JournalsModule,
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath: '.env',
+        }),
     ],
     controllers: [],
-    providers: [PrismaService],
+    providers: [
+        PrismaService,
+        // { provide: APP_GUARD, useClass: JwtAuthGuard }
+    ],
 })
 
 

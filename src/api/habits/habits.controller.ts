@@ -1,11 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
 import { UserInfo } from 'src/common/decorator/user.decorator';
-import LocalAuthGuard from '../../auth/auth.guard';
 import { UpdateHabitDto } from './dto/update.dto';
 import { HabitsService } from './habits.service';
 
 @Controller('habits')
-@UseGuards(LocalAuthGuard)
 export class HabitsController {
     constructor(private readonly services: HabitsService) { }
  

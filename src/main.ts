@@ -4,13 +4,17 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
+import rnd from 'randomstring';
+import * as argon2 from "argon2";
 
 import { AppModule } from './app.module';
-import { ResponseInterceptor } from './common/interceptor/transformInterceptor';
+import { ResponseInterceptor } from './common/interceptor/transform.interceptor';
+import { PrismaClient } from '@prisma/client';
 
 
 async function bootstrap() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
 
     app.use(
         session({
@@ -35,10 +39,9 @@ async function bootstrap() {
 
     app.useGlobalInterceptors(new ResponseInterceptor())
 
-
-    app.use((req, res, next) => {
-        req.user = { userId: 1, timezone: 'Asia/Jakarta' } as UserInfo
-        next()
+    app.use((r, _, n) => {
+        r.user = { userId: 1, timezone: 'Asia/Jakarta' }
+        n()
     })
 
     await app.listen(3000);

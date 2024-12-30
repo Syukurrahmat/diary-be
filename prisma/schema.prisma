@@ -84,6 +84,7 @@ model User {
   email    String @unique()
   password String
   timezone String
+  hashedRt String?
 
   tags    Tag[]
   habbits  Habit[]
@@ -98,6 +99,7 @@ model Habit {
   userId Int
   name   String
   icon   String
+  color   String
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

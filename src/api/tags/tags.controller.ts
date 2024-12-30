@@ -1,11 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
 import { UserInfo } from 'src/common/decorator/user.decorator';
-import LocalAuthGuard from '../../auth/auth.guard';
 import { UpdateCategoryDto } from './dto/update.dto';
 import { TagsService } from './tags.service';
 
 @Controller('tags')
-@UseGuards(LocalAuthGuard)
 export class TagsController {
     constructor(private readonly services: TagsService) { }
 

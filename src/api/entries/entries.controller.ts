@@ -1,13 +1,11 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { UserInfo } from 'src/common/decorator/user.decorator';
-import LocalAuthGuard from '../../auth/auth.guard';
-import { UpdateEntriesDto } from './dto/update.dto';
-import { EntriesService } from './entries.service';
 import { CreateEntriesDto } from './dto/create.dto';
 import { QueryEntriesDto } from './dto/query.dto';
+import { UpdateEntriesDto } from './dto/update.dto';
+import { EntriesService } from './entries.service';
 
 @Controller('entries')
-@UseGuards(LocalAuthGuard)
 export class EntriesController {
     constructor(private readonly services: EntriesService) { }
 

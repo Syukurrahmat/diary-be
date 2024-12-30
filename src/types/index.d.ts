@@ -20,6 +20,7 @@ type MetaPaginated = {
 }
 
 type UserInfo = {
+    email : string,
     userId: number,
     timezone: string
 }

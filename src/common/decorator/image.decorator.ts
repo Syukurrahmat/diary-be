@@ -9,7 +9,6 @@ export function IsImageFile(validationOptions?: ValidationOptions) {
             options: validationOptions,
             validator: {
                 validate(value: any, args: ValidationArguments) {
-                    console.log(value)
                     const file = value as Express.Multer.File;
                     if (!file) return false;
 

@@ -31,11 +31,6 @@ export class EntriesService {
 
         const date = moment.tz(datetime, timezone).startOf('d').utc(true).toDate()
 
-        console.log({
-            datetime,
-            date,
-        })
-
         const imageData = images && await this.imgbbService.uploadPhoto(images)
         const locationData = location && {
             latitude: location[0],

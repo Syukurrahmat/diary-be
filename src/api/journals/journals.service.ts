@@ -1,3 +1,4 @@
+
 import { BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
@@ -48,6 +49,7 @@ export class JournalService {
                 select: {
                     id: true,
                     name: true,
+                    color: true,
                     deletedAt: true,
                     icon: true
                 }
@@ -104,6 +106,7 @@ export class JournalService {
     }
 
     async getLastest({ userId }: UserInfo): Promise<JournalItem[]> {
+
         const maxEntryDate = await this.prisma
             .entry
             .findMany({
@@ -168,10 +171,12 @@ export class JournalService {
                 GROUP BY formatedDate
                 ORDER BY formatedDate ASC;
             `),
-            await this.prisma.$queryRawUnsafe<{ id: number, name: string, count: BigInt }[]>(`
+            await this.prisma.$queryRawUnsafe<{ id: number, color: string, icon : string, name: string, count: BigInt }[]>(`
                 SELECT 
                     h.id,
                     h.name,
+                    h.icon,
+                    h.color,
                     COUNT(jh.A) AS count
                 FROM _habittojournal jh
                 JOIN habit h ON h.id = jh.A

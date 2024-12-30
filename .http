@@ -1,13 +1,18 @@
-POST  http://localhost:3000/notebooks
-
-
-
+POST http://localhost:3000/auth/refresh
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoic3l1a3VydHVsbGFoQGdtYWlsLmNvbSIsInRpbWV6b25lIjoiQXNpYS9KYWthcnRhIiwiaWF0IjoxNzM1NDU3MjU1LCJleHAiOjE3MzYwNjIwNTV9.l_HGaGkSiBGI74sR_lWsu7qzcDpyC0f7pP6ijbVQUzM
 
 ########
 
-POST http://localhost:3000/journals 
+POST http://localhost:3000/auth/signin 
 Content-Type: application/json
 
-{"content":"wwww","habits":["Kerja","Meditasi","Membaca"],"date":"2024-09-15T17:00:00.000Z"}
+{"email" : "syukurtullah@gmail.com", "password" : "Sj03k03r"}
+
+###
+GET http://localhost:3000/journals
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwYXlsb2FkIjoiRlJPMTRQeEVoN0JCQXR2TUtoZ3pvc0NLYjNjUFBpSWQiLCJpYXQiOjE3MzUzODg4MjEsImV4cCI6MTczNTk5MzYyMX0.KSq8pxWu4twSy0d-waoTgDjicxO3fhPOB522JW2yH3U
 
 
+###
+ "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoic3l1a3VydHVsbGFoQGdtYWlsLmNvbSIsInRpbWV6b25lIjoiQXNpYS9KYWthcnRhIiwiaWF0IjoxNzM1MzkwMTQzLCJleHAiOjE3MzUzOTA0NDN9.intqA-nTMZPSI-g_7Oi8BwTfzTXmMrgBfAqgwrN9ykE",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoic3l1a3VydHVsbGFoQGdtYWlsLmNvbSIsInRpbWV6b25lIjoiQXNpYS9KYWthcnRhIiwiaWF0IjoxNzM1MzkwMTQzLCJleHAiOjE3MzU5OTQ5NDN9.4QqaK-f0KDvVjnbx0_soGVDlAL6y_Q2OwcQd8CncbnQ"

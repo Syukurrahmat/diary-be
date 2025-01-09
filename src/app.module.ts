@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt.guard';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
     imports: [
@@ -22,6 +23,9 @@ import { ConfigModule } from '@nestjs/config';
         GeocodingModule,
         HabitModule,
         JournalsModule,
+        PassportModule.register({
+            session: false,
+        }),
         ConfigModule.forRoot({
             isGlobal: true,
             envFilePath: '.env',
@@ -30,7 +34,7 @@ import { ConfigModule } from '@nestjs/config';
     controllers: [],
     providers: [
         PrismaService,
-        // { provide: APP_GUARD, useClass: JwtAuthGuard }
+        { provide: APP_GUARD, useClass: JwtAuthGuard }
     ],
 })
 

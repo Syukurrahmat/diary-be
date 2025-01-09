@@ -4,18 +4,19 @@ import {
     HttpCode,
     HttpStatus,
     Post,
-    Request,
+    Req,
+    Res,
     UseGuards
 } from '@nestjs/common';
 
 
-import { AuthService } from './auth.service';
-// import Express  from 'express'
+import { Request, Response } from 'express';
+import { IsPublic } from 'src/common/decorator/public.decorator';
 import { UserInfo } from 'src/common/decorator/user.decorator';
 import { RefreshTokenGuard } from 'src/common/guards/jwt.guard';
-import { IsPublic } from 'src/common/decorator/public.decorator';
-import { AuthDto } from './dto/auth.dto';
 import { JWTTokens } from 'src/types/tokens';
+import { AuthService } from './auth.service';
+import { AuthDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -30,8 +31,13 @@ export class AuthController {
     @IsPublic()
     @HttpCode(HttpStatus.OK)
     @Post('signin')
-    signinLocal(@Body() dto: AuthDto): Promise<JWTTokens> {
-        return this.authService.signinLocal(dto);
+    async signinLocal(
+        @Res({ passthrough: true }) res: Response,
+        @Body() dto: AuthDto
+    ) {
+        const { accessToken, refreshToken } = await this.authService.signinLocal(dto);
+        this.sendRefreshTokenAtHTTPOnly(res, refreshToken)
+        return { accessToken };
     }
 
     @Post('signout')
@@ -42,13 +48,22 @@ export class AuthController {
     @IsPublic()
     @UseGuards(RefreshTokenGuard)
     @Post('refresh')
-    refreshTokens(
-        @Request() req: any,
+    async refreshTokens(
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
         @UserInfo() { userId }: UserInfo
-    ): Promise<JWTTokens> {
-        const refreshToken = req.user.refreshToken
+    ) {
+        const { refreshToken, accessToken } = await this.authService.refreshTokens(userId, req.cookies.refresh_token);
+        this.sendRefreshTokenAtHTTPOnly(res, refreshToken)
+        return { accessToken }
+    }
 
-        console.log('====================== refreshToken')
-        return this.authService.refreshTokens(userId, refreshToken);
+    private sendRefreshTokenAtHTTPOnly(res: Response, refreshToken: string) {
+        res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
     }
 }

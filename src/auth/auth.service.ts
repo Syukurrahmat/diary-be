@@ -33,8 +33,9 @@ export class AuthService {
             select: { id: true, email: true, password: true, timezone: true },
             where: { email: dto.email },
         });
-        if (!user) throw new ForbiddenException('Access Denied');
 
+        if (!user) throw new ForbiddenException('Access Denied');
+        
         const passwordMatches = await argon2.verify(user.password, dto.password!);
         if (!passwordMatches) throw new ForbiddenException('Access Denied');
 
@@ -62,12 +63,8 @@ export class AuthService {
 
         if (!user || !user.hashedRt) throw new ForbiddenException('Access Denied');
 
-
         const rtMatches = await argon2.verify(user.hashedRt, refreshToken)
 
-        console.log({
-            refreshToken, hase: user.hashedRt, rtMatches
-        })
         if (!rtMatches) throw new ForbiddenException('Access Denied');
 
         const tokens = await this.getTokens(user.id, user.email, user.timezone);

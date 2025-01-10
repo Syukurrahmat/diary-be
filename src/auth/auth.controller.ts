@@ -41,7 +41,15 @@ export class AuthController {
     }
 
     @Post('signout')
-    logout(@UserInfo() { userId }: UserInfo): Promise<boolean> {
+    logout(
+        @Res({ passthrough: true }) res: Response,
+        @UserInfo() { userId }: UserInfo
+    ): Promise<boolean> {
+        res.clearCookie('refresh_token', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+        });
         return this.authService.logout(userId);
     }
 

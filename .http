@@ -1,9 +1,10 @@
 POST http://localhost:3000/auth/refresh
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImVtYWlsIjoic3l1a3VydHVsbGFoQGdtYWlsLmNvbSIsInRpbWV6b25lIjoiQXNpYS9KYWthcnRhIiwiaWF0IjoxNzM1NDU3MjU1LCJleHAiOjE3MzYwNjIwNTV9.l_HGaGkSiBGI74sR_lWsu7qzcDpyC0f7pP6ijbVQUzM
+Host: localhost:3000
+Cookie: sessionId=abcdef123456; anotherCookie=value
 
 ########
 
-POST http://localhost:3000/auth/signin 
+POST https://localhost:3001/auth/signin 
 Content-Type: application/json
 
 {"email" : "syukurtullah@gmail.com", "password" : "Sj03k03r"}

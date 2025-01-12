@@ -1,6 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
-import { IsPublic } from 'src/common/decorator/public.decorator';
-import { UserInfo } from 'src/common/decorator/user.decorator';
+import { UserInfo } from '@/common/decorator/user.decorator';
 import { CreateJournalDto } from './dto/create.dto';
 import { CalenderQuery } from './dto/query.dto';
 import { JournalService } from './journals.service';
@@ -9,7 +8,7 @@ import { JournalService } from './journals.service';
 export class JournalsController {
     constructor(private readonly services: JournalService) { }
 
-    @Post()
+    @Post('/')
     async createJournal(
         @UserInfo() user: UserInfo,
         @Body() createDto: CreateJournalDto
@@ -17,7 +16,7 @@ export class JournalsController {
         return await this.services.addHabitAndSummary(user, createDto);
     }
 
-    @Get()  //lastest journal
+    @Get('/')
     async findAll(@UserInfo() user: UserInfo) {
         return await this.services.getLastest(user);
     }
@@ -28,7 +27,7 @@ export class JournalsController {
         @Query() { month, year, decade }: CalenderQuery
     ) {
         const level = decade ? 'decade' : month && year ? 'month' : year ? 'year' : null
-        if (!level) throw new BadRequestException('invalid parameter ')
+        if (!level) throw new BadRequestException({ message: ['invalid parameter'] })
 
         return await this.services.getCalenderSummary(user, level, { month, year, decade })
     }

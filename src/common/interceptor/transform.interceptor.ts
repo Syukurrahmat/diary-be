@@ -25,8 +25,8 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
         return next.handle().pipe(
             map(data => ({
                 statusCode,
-                message: statusCode >= 400 ? 'Error' : 'Success',
-                error: statusCode >= 400 ? response.message : null,
+                message: statusCode >= 400 ? response.message || 'Error' : 'Success',
+                error: statusCode >= 400 ? response.error : null,
                 data,
             })),
 

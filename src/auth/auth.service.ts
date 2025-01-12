@@ -1,7 +1,10 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import * as argon2 from "argon2";
-import { JWTTokens } from 'src/types/tokens';
+import { CreateUserDto } from '@/api/users/dto/create-user.dto';
+import { UsersService } from '@/api/users/users.service';
+import { JWTTokens } from '@/types/tokens';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthDto } from './dto/auth.dto';
 
@@ -10,80 +13,50 @@ export class AuthService {
     constructor(
         private prisma: PrismaService,
         private jwtService: JwtService,
+        private usersService: UsersService,
     ) { }
 
-    async signupLocal(dto: AuthDto): Promise<JWTTokens> {
-        const user = await this.prisma.user.create({
-            data: {
-                name: 'xoxxo',
-                email: dto.email!,
-                password: await argon2.hash(dto.password!),
-                timezone: 'Asia/Jakarta'
-            },
-        })
-
-        const tokens = await this.getTokens(user.id, user.email, user.timezone);
-        await this.updateRtHash(user.id, tokens.refreshToken);
-
-        return tokens;
+    signupLocal(dto: CreateUserDto): Promise<User> {
+        return this.usersService.create(dto)
     }
 
     async signinLocal(dto: AuthDto): Promise<JWTTokens> {
-        const user = await this.prisma.user.findUnique({
-            select: { id: true, email: true, password: true, timezone: true },
-            where: { email: dto.email },
-        });
-
+        const user = await this.usersService.findOneByEmail(dto.email!);
         if (!user) throw new ForbiddenException('Access Denied');
-        
+
         const passwordMatches = await argon2.verify(user.password, dto.password!);
         if (!passwordMatches) throw new ForbiddenException('Access Denied');
 
-        const tokens = await this.getTokens(user.id, user.email, user.timezone);
-        await this.updateRtHash(user.id, tokens.refreshToken);
+        const { id, email, timezone } = user
+        const tokens = await this.getTokens(id, email, timezone);
+        await this.usersService.updateRtHash(id, tokens.refreshToken);
 
         return tokens;
     }
 
     async logout(userId: number): Promise<boolean> {
-        await this.prisma.user.update({
-            where: {
-                id: userId,
-                hashedRt: { not: null },
-            },
-            data: { hashedRt: null },
-        });
+        await this.usersService.deleteRtHash(userId)
         return true;
     }
 
     async refreshTokens(userId: number, refreshToken: string): Promise<JWTTokens> {
-        const user = await this.prisma.user.findUnique({
-            where: { id: userId },
-        });
-
+        const user = await this.usersService.findOne(userId)
         if (!user || !user.hashedRt) throw new ForbiddenException('Access Denied');
 
         const rtMatches = await argon2.verify(user.hashedRt, refreshToken)
-
         if (!rtMatches) throw new ForbiddenException('Access Denied');
 
-        const tokens = await this.getTokens(user.id, user.email, user.timezone);
-        await this.updateRtHash(user.id, tokens.refreshToken);
+        const { id, email, timezone } = user
+        const tokens = await this.getTokens(id, email, timezone);
+        await this.usersService.updateRtHash(id, tokens.refreshToken);
 
         return tokens;
-    }
-
-    async updateRtHash(userId: number, refreshToken: string): Promise<void> {
-        await this.prisma.user.update({
-            where: { id: userId },
-            data: { hashedRt: await argon2.hash(refreshToken) },
-        });
     }
 
     async getTokens(userId: number, email: string, timezone: string): Promise<JWTTokens> {
         const jwtPayload: UserInfo = { userId, email, timezone };
 
-        const [at, rt] = await Promise.all([
+        const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(jwtPayload, {
                 secret: process.env.JWT_SECRET_ACCESS_TOKEN,
                 expiresIn: '10m',
@@ -94,9 +67,6 @@ export class AuthService {
             }),
         ]);
 
-        return {
-            accessToken: at,
-            refreshToken: rt,
-        };
+        return { accessToken, refreshToken };
     }
 }

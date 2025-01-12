@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '@/prisma/prisma.service';
+import * as argon2 from "argon2";
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 
@@ -12,27 +13,55 @@ export class UsersService {
         this.resource = prisma.user
     }
 
-    create(createUserDto: CreateUserDto) {
-        return 'This action adds a new user';
+    async create(createUserDto: CreateUserDto) {
+        const { email, name, password, timezone } = createUserDto
+
+        const emailIsUsed = await this.resource.count({ where: { email } })
+        if (emailIsUsed) throw new BadRequestException({ message: ['email already used'] })
+
+        return await this.resource.create({
+            data: {
+                name: name!,
+                email: email!,
+                password: await argon2.hash(password!),
+                timezone: timezone!,
+            },
+        })
     }
 
-    findAll() {
-        return `This action returns all users`;
-    }
-
-    async findEmailAndPass(email: string) {
-        return await this.resource.findFirst({
+    findEmailAndPass(email: string) {
+        return this.resource.findFirst({
             where: { email }, select: {
                 id: true,
                 password: true,
-                timezone :true,
+                timezone: true,
             }
         })
     }
 
-    async findOne(id: number) {
-        return await this.resource.findFirst({ where: { id } })
+    findOne(id: number) {
+        return this.resource.findFirst({ where: { id } })
+    }
 
+    findOneByEmail(email: string) {
+        return this.resource.findFirst({
+            where: { email },
+            select: { id: true, email: true, password: true, timezone: true },
+        })
+    }
+
+    async updateRtHash(userId: number, refreshToken: string): Promise<void> {
+        await this.resource.update({
+            where: { id: userId },
+            data: { hashedRt: await argon2.hash(refreshToken) },
+        });
+    }
+
+    async deleteRtHash(id: number): Promise<void> {
+        await this.resource.update({
+            where: { id, hashedRt: { not: null } },
+            data: { hashedRt: null },
+        });
     }
 
     update(id: string, updateUserDto: UpdateUserDto) {

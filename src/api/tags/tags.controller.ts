@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
-import { UserInfo } from 'src/common/decorator/user.decorator';
+import { UserInfo } from '@/common/decorator/user.decorator';
 import { UpdateCategoryDto } from './dto/update.dto';
 import { TagsService } from './tags.service';
 

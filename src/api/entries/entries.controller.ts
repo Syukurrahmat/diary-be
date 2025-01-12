@@ -1,10 +1,10 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { UserInfo } from 'src/common/decorator/user.decorator';
+import { BadRequestException, Body, Controller, Delete, Param, Patch, Post } from '@nestjs/common';
+import moment from 'moment-timezone';
 import { CreateEntriesDto } from './dto/create.dto';
-import { QueryEntriesDto } from './dto/query.dto';
 import { UpdateEntriesDto } from './dto/update.dto';
 import { EntriesService } from './entries.service';
-
+import { UserInfo } from '@/common/decorator/user.decorator';
+ 
 @Controller('entries')
 export class EntriesController {
     constructor(private readonly services: EntriesService) { }
@@ -14,27 +14,17 @@ export class EntriesController {
         @UserInfo() user: UserInfo,
         @Body() createDto: CreateEntriesDto,
     ) {
-        const { content, images } = createDto
+        const { content, images, datetime } = createDto
+
         if (content?.length == 0 && images?.length == 0) {
-            throw new BadRequestException('tidak boleh kosong')
+            throw new BadRequestException({ message: ['content atau images tidak boleh kosong'] })
         }
+
+        if (moment.tz(datetime, user.timezone).isAfter(moment())) {
+            throw new BadRequestException({ message: ['datetime tidak boleh lebih dari hari ini'] })
+        }
+
         return await this.services.create(user, createDto);
-    }
-
-    @Get()
-    async findAll(
-        @UserInfo() user: UserInfo,
-        @Query() date: QueryEntriesDto,
-    ) {
-        return await this.services.findAll(user, date);
-    }
-
-    @Get(':id')
-    async findOne(
-        @UserInfo() user: UserInfo,
-        @Param('id') id: string
-    ) {
-        return await this.services.findOne(user, +id);
     }
 
     @Patch(':id')

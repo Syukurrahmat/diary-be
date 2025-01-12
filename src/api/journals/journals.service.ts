@@ -1,19 +1,10 @@
-
-import { BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { PrismaService } from '@/prisma/prisma.service';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
 import moment from 'moment-timezone';
-import { ImgbbService } from 'src/lib/Imgbb/Imgbb.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { GeocodingService } from '../geocoding/geocoding.service';
 import { CreateJournalDto } from './dto/create.dto';
 import { CalenderQuery } from './dto/query.dto';
-
-
-type DailyJournal = {
-    date: Date,
-    entries: SimpleEntryData[]
-}
 
 @Injectable()
 export class JournalService {
@@ -45,68 +36,46 @@ export class JournalService {
                 omit: { journalId: true },
                 orderBy: { datetime: 'desc' as any }
             },
-            habits: {
-                select: {
-                    id: true,
-                    name: true,
-                    color: true,
-                    deletedAt: true,
-                    icon: true
-                }
-            },
-            summary: { omit: { journalId: true } }
-        },
+            habits: { select: { id: true, name: true, color: true, deletedAt: true, icon: true } }
+        }
     }
 
     constructor(
         private prisma: PrismaService,
-        private imgbbService: ImgbbService,
-        private geocodingService: GeocodingService
     ) {
         this.resource = prisma.journal
     }
-
 
     async addHabitAndSummary({ userId, timezone }: UserInfo, createDto: CreateJournalDto) {
         const { content, habits, date: userDate } = createDto
 
         const date = moment.tz(userDate, timezone).startOf('D').utc(true).toDate()
-        const userId_date = { date, userId }
+        const userId_date = { userId, date }
 
-        const isExists = await this.prisma.summary.count({ where: { journal: userId_date } })
-
-        if (isExists) throw new UnprocessableEntityException('item sudah ada ')
-
-        const { journalId } = await this.prisma.summary.create({
-            data: {
-                content: content!, journal: {
-                    connectOrCreate: {
-                        where: { userId_date },
-                        create: userId_date
-                    }
-                }
-            },
-            select: { journalId: true }
-        })
+        const isExist = await this.resource.count({ where: { userId, date } })
 
         const validHabits = await this.prisma.habit.findMany({
             where: {
                 userId,
+                deletedAt: null,
                 id: { in: habits! },
-                deletedAt: null
             },
             select: { id: true }
         })
 
-        await this.resource.update({
-            where: { id: journalId },
-            data: { habits: { connect: validHabits } },
-            select: { id: true }
-        })
+        const data = {
+            summary: content!,
+            habits: { connect: validHabits }
+        }
+
+        if (isExist) {
+            await this.resource.update({ where: { userId_date }, data })
+        } else {
+            await this.resource.create({ data: { ...userId_date, ...data } })
+        }
     }
 
     async getLastest({ userId }: UserInfo): Promise<JournalItem[]> {
-
         const maxEntryDate = await this.prisma
             .entry
             .findMany({
@@ -121,7 +90,7 @@ export class JournalService {
             .findMany({
                 where: { userId, ...(maxEntryDate && { date: { gte: maxEntryDate } }) },
                 orderBy: { date: 'desc' },
-                ...this.resourceQuery,
+                ...this.resourceQuery
             })
 
 
@@ -171,7 +140,7 @@ export class JournalService {
                 GROUP BY formatedDate
                 ORDER BY formatedDate ASC;
             `),
-            await this.prisma.$queryRawUnsafe<{ id: number, color: string, icon : string, name: string, count: BigInt }[]>(`
+            await this.prisma.$queryRawUnsafe<{ id: number, color: string, icon: string, name: string, count: BigInt }[]>(`
                 SELECT 
                     h.id,
                     h.name,
@@ -214,7 +183,7 @@ export class JournalService {
 
     async getPerDay({ userId, timezone }: UserInfo, dateString: string) {
         const date = moment.tz(dateString, timezone).startOf('D').utc(true)
-        if (!date.isValid()) throw new BadRequestException('date tidak valid')
+        if (!date.isValid()) throw new BadRequestException({ message: ['date tidak valid'] })
 
         const journal = await this.resource.findFirst({
             where: { userId, date: date.toDate() },
@@ -234,10 +203,11 @@ type JournalItem = {
     habits: {
         id: number,
         name: string,
+        color : string,
         icon: string,
         deleted: boolean
     }[]
-    summary: any
+    summary: string | null
 }
 
 type Entry = {

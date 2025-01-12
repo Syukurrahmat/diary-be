@@ -1,25 +1,42 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
-import { UserInfo } from 'src/common/decorator/user.decorator';
+import { Body, Controller, Delete, Get, Param, ParseArrayPipe, Patch, Post, Query } from '@nestjs/common';
+import { UserInfo } from '@/common/decorator/user.decorator';
+import { ChangeOrderItemDto } from './dto/changeOrder';
+import { CreateHabitDto } from './dto/create.dto';
 import { UpdateHabitDto } from './dto/update.dto';
 import { HabitsService } from './habits.service';
 
 @Controller('habits')
 export class HabitsController {
     constructor(private readonly services: HabitsService) { }
- 
-    @Get()
-    async findAll(
-        @UserInfo() user: UserInfo
+
+    @Post()
+    create(
+        @UserInfo() user: UserInfo,
+        @Body() createDto: CreateHabitDto
     ) {
-        return await this.services.findAll(user);
+        return this.services.create(user, createDto);
+    }
+
+    @Get()
+    findAll(@UserInfo() user: UserInfo) {
+        return this.services.findAll(user);
+    }
+
+
+    @Patch('/order')
+    changeOrder(
+        @UserInfo() user: UserInfo,
+        @Body(new ParseArrayPipe({ items: ChangeOrderItemDto, whitelist: true })) body: ChangeOrderItemDto[]
+    ) {
+        return this.services.changeOrder(user, body)
     }
 
     @Get(':id')
-    async findOne(
+    findOne(
         @UserInfo() user: UserInfo,
         @Param('id') id: string
     ) {
-        return await this.services.findOne(user, +id);
+        return this.services.findOne(user, +id);
     }
 
     @Patch(':id')

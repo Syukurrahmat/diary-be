@@ -1,22 +1,13 @@
-import {
-    Body,
-    Controller,
-    HttpCode,
-    HttpStatus,
-    Post,
-    Req,
-    Res,
-    UseGuards
-} from '@nestjs/common';
-
-
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common'; //prettier-ignore
 import { Request, Response } from 'express';
-import { IsPublic } from 'src/common/decorator/public.decorator';
-import { UserInfo } from 'src/common/decorator/user.decorator';
-import { RefreshTokenGuard } from 'src/common/guards/jwt.guard';
-import { JWTTokens } from 'src/types/tokens';
+import { CreateUserDto } from '@/api/users/dto/create-user.dto';
+import { IsPublic } from '@/common/decorator/public.decorator';
+import { UserInfo } from '@/common/decorator/user.decorator';
+import { RefreshTokenGuard } from '@/common/guards/jwt.guard';
+import { JWTTokens } from '@/types/tokens';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
+import { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +15,7 @@ export class AuthController {
 
     @IsPublic()
     @Post('signup')
-    signupLocal(@Body() dto: AuthDto): Promise<JWTTokens> {
+    signupLocal(@Body() dto: CreateUserDto): Promise<User> {
         return this.authService.signupLocal(dto);
     }
 
@@ -36,7 +27,7 @@ export class AuthController {
         @Body() dto: AuthDto
     ) {
         const { accessToken, refreshToken } = await this.authService.signinLocal(dto);
-        this.sendRefreshTokenAtHTTPOnly(res, refreshToken)
+        this.sendRefreshTokenAtHTTPCookie(res, refreshToken)
         return { accessToken };
     }
 
@@ -45,11 +36,7 @@ export class AuthController {
         @Res({ passthrough: true }) res: Response,
         @UserInfo() { userId }: UserInfo
     ): Promise<boolean> {
-        res.clearCookie('refresh_token', {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-        });
+        this.cleartRefreshTokenAtHTTPCookie(res)
         return this.authService.logout(userId);
     }
 
@@ -62,16 +49,24 @@ export class AuthController {
         @UserInfo() { userId }: UserInfo
     ) {
         const { refreshToken, accessToken } = await this.authService.refreshTokens(userId, req.cookies.refresh_token);
-        this.sendRefreshTokenAtHTTPOnly(res, refreshToken)
+        this.sendRefreshTokenAtHTTPCookie(res, refreshToken)
         return { accessToken }
     }
 
-    private sendRefreshTokenAtHTTPOnly(res: Response, refreshToken: string) {
+    private sendRefreshTokenAtHTTPCookie(res: Response, refreshToken: string) {
         res.cookie('refresh_token', refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+    }
+
+    private cleartRefreshTokenAtHTTPCookie(res: Response) {
+        res.clearCookie('refresh_token', {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
         });
     }
 }

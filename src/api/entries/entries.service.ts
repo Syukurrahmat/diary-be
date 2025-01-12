@@ -1,13 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { DefaultArgs } from '@prisma/client/runtime/library';
-import { PrismaService } from 'src/prisma/prisma.service';
+import moment from 'moment-timezone';
+import { ImgbbService } from '@/lib/Imgbb/Imgbb.service';
+import { PrismaService } from '@/prisma/prisma.service';
+import { GeocodingService } from '../geocoding/geocoding.service';
 import { CreateEntriesDto } from './dto/create.dto';
 import { UpdateEntriesDto } from './dto/update.dto';
-import { ImgbbService } from 'src/lib/Imgbb/Imgbb.service';
-import { GeocodingService } from '../geocoding/geocoding.service';
-import { QueryEntriesDto } from './dto/query.dto';
-import  moment from 'moment-timezone';
 
 
 @Injectable()
@@ -30,8 +29,8 @@ export class EntriesService {
         const { content, location, images, datetime, tags } = createDto
 
         const date = moment.tz(datetime, timezone).startOf('d').utc(true).toDate()
-
         const imageData = images && await this.imgbbService.uploadPhoto(images)
+
         const locationData = location && {
             latitude: location[0],
             longitude: location[1],
@@ -58,24 +57,6 @@ export class EntriesService {
                         }))
                     }
                 }
-            })
-    }
-
-    async findAll({ userId }: UserInfo, { date, tz }: QueryEntriesDto) {
-        if (date) {
-            const startOfDay = moment.tz(date, tz!).startOf('day').toDate()
-            const endOfDay = moment.tz(date, tz!).endOf('day').toDate()
-
-            return { startOfDay, endOfDay }
-        }
-
-    }
-
-    async findOne({ userId }: UserInfo, id: number) {
-        return await this.resource
-            .findFirst({
-                where: { id, journal: { userId } },
-                ...this.resourceQuery
             })
     }
 

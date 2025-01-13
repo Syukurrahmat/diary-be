@@ -1,7 +1,7 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { UserInfo } from '@/common/decorator/user.decorator';
+import { BadRequestException, Body, Controller, Get, Param, Post } from '@nestjs/common';
+import moment from 'moment-timezone';
 import { CreateJournalDto } from './dto/create.dto';
-import { CalenderQuery } from './dto/query.dto';
 import { JournalService } from './journals.service';
 
 @Controller('journals')
@@ -21,22 +21,20 @@ export class JournalsController {
         return await this.services.getLastest(user);
     }
 
-    @Get('/calender')
+    @Get('/calendar/:yearMonth')
     async getMonthlySummary(
         @UserInfo() user: UserInfo,
-        @Query() { month, year, decade }: CalenderQuery
+        @Param('yearMonth') quarter: string
     ) {
-        const level = decade ? 'decade' : month && year ? 'month' : year ? 'year' : null
-        if (!level) throw new BadRequestException({ message: ['invalid parameter'] })
-
-        return await this.services.getCalenderSummary(user, level, { month, year, decade })
+        if (!moment(quarter).isValid()) throw new BadRequestException({ message: ['yearMonth param invalid'] })
+        return await this.services.getCalender(user, quarter!)
     }
 
     @Get(':dateString')
-    async findOne(
+    findOne(
         @UserInfo() user: UserInfo,
         @Param('dateString') dateString: string
     ) {
-        return await this.services.getPerDay(user, dateString);
+        return this.services.getPerDay(user, dateString);
     }
 }
